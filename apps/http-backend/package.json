@@ -8,11 +8,18 @@
     "start": "node ./dist/index.js",
     "dev": "tsc -b && node ./dist/index.js"
   },
+  "devDependencies": {
+     "@repo/typescript-config": "workspace:*",
+     "@repo/backend-common" : "workspace:*",
+     "@repo/common": "workspace:*"
+    },
   "dependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "bcrypt": "^6.0.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "typescript": "^5.8.3",
     "zod": "^3.25.67"
   },
