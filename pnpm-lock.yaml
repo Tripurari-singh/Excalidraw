@@ -127,6 +127,10 @@ importers:
       prisma:
         specifier: ^7.0.0
         version: 7.0.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2)
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/backend-common:
     devDependencies:
