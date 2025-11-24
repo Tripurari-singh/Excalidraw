@@ -15,7 +15,7 @@ app.get("/signup" , (req  , res) => {
     
     if(!data){
         res.status(400).json({
-            message : "Data Not found"
+            message : "Invalid crediantials"
         })
     }
 
@@ -40,7 +40,7 @@ app.post("/signup" , (req , res) => {
     
     if(!data){
         res.status(400).json({
-            message : "Data Not found"
+            message : "Invalid crediantials"
         })
     }
 
@@ -61,7 +61,21 @@ app.post("/signup" , (req , res) => {
 })
 
 app.post("/room", middleware , (req , res) => {
-    //Db call
+    try{
+        const data = CreateRoomSchema.parse(req.body);
+
+        if(!data){
+            res.status(400).json({
+                message : "Invalid crediantials"
+            })
+        }
+
+        
+    }catch(error){
+        res.status(500).json({
+            message : "Internal server Error"
+        })
+    }
 })
 
 app.listen(3000 , () => {
