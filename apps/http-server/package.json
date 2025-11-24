@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@repo/backend-common" : "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",

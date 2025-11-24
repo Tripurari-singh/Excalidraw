@@ -3,6 +3,7 @@ import z from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "./config";
+import { middleware } from "./middleware";
 
 const app = express();
 
@@ -67,8 +68,8 @@ app.post("/signup" , (req , res) => {
     }
 })
 
-app.post("/room" , (req , res) => {
-    
+app.post("/room", middleware , (req , res) => {
+    //Db call
 })
 
 app.listen(3000 , () => {
