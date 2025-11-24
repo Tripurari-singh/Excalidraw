@@ -9,8 +9,6 @@
     "dev": "tsc -b && node ./dist/index.js"
   },
   "dependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "@repo/backend-common" : "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -22,6 +20,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/backend-common" : "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10"

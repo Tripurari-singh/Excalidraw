@@ -2,9 +2,8 @@ import express from "express";
 import z from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
-import { JWT_SECRET } from "./config";
 import { middleware } from "./middleware";
-
+import {JWT_SECRET} from "@repo/backend-common/config"
 const app = express();
 
 app.get("/signup" , (req  , res) => {
