@@ -42,6 +42,9 @@ importers:
       '@repo/backend-common':
         specifier: workspace:*
         version: link:../../packages/backend-common
+      '@repo/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -97,6 +100,9 @@ importers:
       '@repo/backend-common':
         specifier: workspace:*
         version: link:../../packages/backend-common
+      '@repo/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -121,6 +127,16 @@ importers:
       '@types/node':
         specifier: ^20.19.25
         version: 20.19.25
+
+  packages/common:
+    dependencies:
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/eslint-config:
     devDependencies:

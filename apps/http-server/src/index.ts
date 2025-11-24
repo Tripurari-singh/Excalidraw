@@ -4,17 +4,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { middleware } from "./middleware";
 import {JWT_SECRET} from "@repo/backend-common/config"
+import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common/types";
+
 const app = express();
 
 app.get("/signup" , (req  , res) => {
     try{
-        const signupschema = z.object({
-        username : z.string().max(20 , "username must be atmax 20 characters").min(3 , "username must be atleast 3 characters"),
-        password : z.string().max(20 , "password must be atmax 20 characters").min(3 , "password must be atleast 3 characters"),
-        email : z.string().email(),
-    })
      
-    const data = signupschema.parse(req.body);
+    const data = CreateUserSchema.parse(req.body);
     
     if(!data){
         res.status(400).json({
@@ -38,12 +35,8 @@ app.get("/signup" , (req  , res) => {
 })
 app.post("/signup" , (req , res) => {
     try{
-            const signinschema = z.object({
-        username : z.string().max(20 , "username must be atmax 20 characters").min(3 , "username must be atleast 3 characters"),
-        password : z.string().max(20 , "password must be atmax 20 characters").min(3 , "password must be atleast 3 characters"),
-    })
 
-    const data = signinschema.parse(req.body);
+    const data = SigninSchema.parse(req.body);
     
     if(!data){
         res.status(400).json({
