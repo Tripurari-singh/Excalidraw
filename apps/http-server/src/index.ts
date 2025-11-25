@@ -19,10 +19,11 @@ app.get("/signup" , async (req  , res) => {
         res.status(400).json({
             message : "Invalid crediantials"
         })
+        return; 
     }
 
     // DB call to get check use already exist...
-    const userExist = await prisma.User.findUnique({
+    const userExist = await prisma.user.findUnique({
         where : {
             email : ParsedData.email
         }
@@ -32,6 +33,7 @@ app.get("/signup" , async (req  , res) => {
         res.status(400).json({
             message : "User Already Exist"
         })
+        return;
     }
 
     // DB call to add user to data
@@ -40,11 +42,13 @@ app.get("/signup" , async (req  , res) => {
             username : ParsedData.username,
             password : ParsedData.password,
             email : ParsedData.email,
+            avatar : ParsedData.avatar,
         }
     })
 
     res.status(200).json({
         message : "user added successfully !",
+        userid : user.id,
         user,
     })
     }catch(error){
@@ -63,6 +67,7 @@ app.post("/signin" , async (req , res) => {
         res.status(400).json({
             message : "Invalid crediantials"
         })
+        return;
     }
 
     //DB call to get the user

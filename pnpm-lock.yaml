@@ -127,6 +127,9 @@ importers:
       '@prisma/client':
         specifier: ^7.0.0
         version: 7.0.0(prisma@7.0.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2))(typescript@5.9.2)
+      node-typescript:
+        specifier: ^0.1.3
+        version: 0.1.3
       prisma:
         specifier: ^7.0.0
         version: 7.0.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2)
@@ -1587,6 +1590,10 @@ packages:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
 
+  node-typescript@0.1.3:
+    resolution: {integrity: sha512-EK34kMXvdXsVvtzLZVQN3ORdLTQCG0gSnhkQOF8vzrO8beXoXqIUNAGACF9c6N5LDDzEdM8YCXFjbuCE8Mz1Jg==}
+    engines: {node: 0.8.x}
+
   nypm@0.6.2:
     resolution: {integrity: sha512-7eM+hpOtrKrBDCh7Ypu2lJ9Z7PNZBdi/8AT3AX8xoCj43BBVHD0hPSTEvMtkMpfs8FCqBGhxB+uToIQimA111g==}
     engines: {node: ^14.16.0 || >=16.10.0}
@@ -2048,6 +2055,11 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
+
+  typescript@0.8.3:
+    resolution: {integrity: sha512-42GP2FBgk+/q8Y0MRt0vJoWx6I7ADAKBTnz7gK++gwQtzC3h54Yltqb8z+EFozZ4OHhz6uwLmXFthCn4oDOGxg==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
 
   typescript@5.9.2:
     resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
@@ -3676,6 +3688,10 @@ snapshots:
 
   node-gyp-build@4.8.4: {}
 
+  node-typescript@0.1.3:
+    dependencies:
+      typescript: 0.8.3
+
   nypm@0.6.2:
     dependencies:
       citty: 0.1.6
@@ -4234,6 +4250,8 @@ snapshots:
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
+
+  typescript@0.8.3: {}
 
   typescript@5.9.2: {}
 
