@@ -1,30 +1,51 @@
 import express from "express";
-import z from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { middleware } from "./middleware";
 import {JWT_SECRET} from "@repo/backend-common/config"
 import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common/types";
+import { prisma } from "@repo/database/client";
 
 const app = express();
 
-app.get("/signup" , (req  , res) => {
+app.use(express.json());
+
+app.get("/signup" , async (req  , res) => {
     try{
      
-    const data = CreateUserSchema.parse(req.body);
+    const ParsedData = CreateUserSchema.parse(req.body);
     
-    if(!data){
+    if(!ParsedData){
         res.status(400).json({
             message : "Invalid crediantials"
         })
     }
 
     // DB call to get check use already exist...
+    const userExist = await prisma.User.findUnique({
+        where : {
+            email : ParsedData.email
+        }
+    })
+
+    if(userExist){
+        res.status(400).json({
+            message : "User Already Exist"
+        })
+    }
 
     // DB call to add user to data
+    const user =  await prisma.user.create({
+        data : {
+            username : ParsedData.username,
+            password : ParsedData.password,
+            email : ParsedData.email,
+        }
+    })
 
     res.status(200).json({
-        message : "user added successfully !"
+        message : "user added successfully !",
+        user,
     })
     }catch(error){
         res.status(500).json({
@@ -33,12 +54,12 @@ app.get("/signup" , (req  , res) => {
         })
     }
 })
-app.post("/signup" , (req , res) => {
+app.post("/signin" , async (req , res) => {
     try{
 
-    const data = SigninSchema.parse(req.body);
+    const ParsedData = SigninSchema.parse(req.body);
     
-    if(!data){
+    if(!ParsedData){
         res.status(400).json({
             message : "Invalid crediantials"
         })

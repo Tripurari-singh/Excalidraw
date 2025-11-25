@@ -3,8 +3,8 @@ import { z } from "zod";
 export const CreateUserSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters"),
+    .min(3, "Name must be at least 3 characters")
+    .max(20, "Name must be at most 20 characters"),
 
   password: z
     .string()
@@ -14,19 +14,25 @@ export const CreateUserSchema = z.object({
   email: z
     .string()
     .email("Invalid email format"),
+
+  avatar: z
+    .string()
+    .url("Avatar must be a valid URL"),
 });
+
 
 export const SigninSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters"),
+    .min(3, "Name must be at least 3 characters")
+    .max(20, "Name must be at most 20 characters"),
 
   password: z
     .string()
     .min(3, "Password must be at least 3 characters")
     .max(20, "Password must be at most 20 characters"),
 });
+
 
 export const CreateRoomSchema = z.object({
   name: z
