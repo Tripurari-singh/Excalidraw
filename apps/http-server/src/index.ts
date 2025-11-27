@@ -104,12 +104,6 @@ app.post("/room", middleware , (req , res) => {
     }
 })
 
-app.get("./hello" , async (req , res) => {
-    res.json({
-        messgage : "hello world"
-    })
-})
-
 app.listen(3000 , () => {
     console.log("server is listening on port 3000 !!")
 })
