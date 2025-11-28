@@ -31,6 +31,10 @@ export const SigninSchema = z.object({
     .string()
     .min(3, "Password must be at least 3 characters")
     .max(20, "Password must be at most 20 characters"),
+
+  email: z
+    .string()
+    .email("Invalid email format"),
 });
 
 

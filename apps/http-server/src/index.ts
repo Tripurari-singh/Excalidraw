@@ -88,8 +88,29 @@ app.post("/signin" , async (req , res) => {
     }
 
     //DB call to get the user
-    const userId = 1
-    const token =  await jwt.sign({userId} , JWT_SECRET)
+    const user = await prisma.user.findUnique({
+        where : {
+            email : ParsedData.email
+        }
+    });
+
+    if(!user){
+        res.status(400).json({
+            message : "User Not Found in Database !"
+        })
+    }
+
+    // Password Matching
+    const isvalid = await bcrypt.compare(ParsedData.password , user.password);
+
+    if(!isvalid){
+        res.status(400).json({
+            message : "Invalid Password"
+        })
+    }
+    const token =  await jwt.sign({
+        userId : user.id,
+    }, JWT_SECRET)
 
     res.status(200).json({
         message : "SignIn Successfully",
