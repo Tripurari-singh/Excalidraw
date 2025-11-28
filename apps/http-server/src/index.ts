@@ -16,7 +16,6 @@ app.use(express.json());
 
 app.post("/signup" , async (req  , res) => {
     console.log("Route Hit")
-    console.log("DATABASE_URL = ", process.env.DATABASE_URL);
     try{
      
     const ParsedData = CreateUserSchema.parse(req.body);
