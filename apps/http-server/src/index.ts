@@ -2,15 +2,21 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { middleware } from "./middleware";
-import {JWT_SECRET} from "@repo/backend-common/config"
+import { JWT_SECRET } from "@repo/backend-common/config"
 import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common/types";
+
+import dotenv from "dotenv";
+dotenv.config();
 import { prisma } from "@repo/db";
 
 const app = express();
 
 app.use(express.json());
 
-app.get("/signup" , async (req  , res) => {
+
+app.post("/signup" , async (req  , res) => {
+    console.log("Route Hit")
+    console.log("DATABASE_URL = ", process.env.DATABASE_URL);
     try{
      
     const ParsedData = CreateUserSchema.parse(req.body);
@@ -52,6 +58,7 @@ app.get("/signup" , async (req  , res) => {
         user,
     })
     }catch(error){
+        console.log(error);
         res.status(500).json({
             message : "Internal server Error",
             error  : error
