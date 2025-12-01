@@ -125,9 +125,6 @@ app.post("/signin" , async (req , res) => {
     }
 })
 
-
-
-
 app.post("/room", middleware , async (req , res) => {
     try{
         const ParsedData = CreateRoomSchema.parse(req.body);
@@ -159,6 +156,22 @@ app.post("/room", middleware , async (req , res) => {
             message : "Internal server Error"
         })
     }
+})
+app.get("/chats/:roomId" , async (req , res) => {
+    const roomId = Number(req.params.roomId);
+    const messages = await prisma.chat.findMany({
+        where : {
+            roomId : roomId,
+        },
+        orderBy : {
+            id : "desc"
+        },
+        take : 50
+    });
+
+    res.status(200).json({
+        messages
+    })
 })
 
 app.listen(3000 , () => {
