@@ -128,15 +128,30 @@ app.post("/signin" , async (req , res) => {
 
 
 
-app.post("/room", middleware , (req , res) => {
+app.post("/room", middleware , async (req , res) => {
     try{
-        const data = CreateRoomSchema.parse(req.body);
+        const ParsedData = CreateRoomSchema.parse(req.body);
 
-        if(!data){
+        if(!ParsedData){
             res.status(400).json({
                 message : "Invalid crediantials"
             })
         }
+        
+        //@ts-ignore
+        const userId = req.userId;
+
+        const room = await prisma.room.create({
+            data : {
+                slug : ParsedData.name,
+                adminId : userId
+            }
+        })
+
+        res.status(200).json({
+            message : "Added To Room",
+            roomId : room.id,
+        })
 
         
     }catch(error){
