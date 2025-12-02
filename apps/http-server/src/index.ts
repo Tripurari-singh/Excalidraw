@@ -174,6 +174,24 @@ app.get("/chats/:roomId" , async (req , res) => {
     })
 })
 
+app.get("/users" , async(req , res) => {
+    try{
+        const users = await prisma.user.findMany();
+
+        res.status(200).json({
+            message : "All Users",
+            users : users
+        })
+    }catch(error){
+        console.log(error);
+        res.json({
+            message : "Error occured"
+        })
+    }
+})
+
+
+
 app.listen(3000 , () => {
     console.log("server is listening on port 3000 !!")
 })

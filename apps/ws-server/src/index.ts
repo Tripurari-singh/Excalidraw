@@ -1,7 +1,11 @@
 import { WebSocket, WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken"
+import "dotenv/config";
 import {JWT_SECRET} from "@repo/backend-common/config"
 import { prisma } from "@repo/db"
+console.log("WS ENV:", process.env.DATABASE_URL);
+
+
 
 const wss = new WebSocketServer({port : 8080});
 
@@ -83,13 +87,22 @@ wss.on('connection' , function connection(ws , request){
             const roomId = ParsedData.roomId;
             const message = ParsedData.message;
 
-            await prisma.chat.create({
-                data : {
-                    roomId,
-                    message,
-                    userId
-                }
-            })
+            try{
+                await prisma.chat.create({
+                    data : {
+                        roomId,
+                        message,
+                        userId
+                    }
+                })
+            }catch(error){
+                console.log(error);
+                ws.send(JSON.stringify({
+                    type : "error",
+                    message : "Databse failed"
+                }))
+                return;
+            }
 
             users.forEach(user => {
                 user.ws.send(JSON.stringify({
@@ -106,3 +119,4 @@ wss.on('connection' , function connection(ws , request){
         ws.send('pong');
     });
 });
+
