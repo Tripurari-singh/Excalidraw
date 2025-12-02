@@ -11,9 +11,16 @@ export function ChatRoomClient({
 }){
     const [chats , setChats] = useState(messages);
     const {loading  , socket } = useSocket();
+    const [currentMessages , setCurrentMessages] = useState("");
 
     useEffect(() => {
         if(socket && !loading){
+
+            socket.send(JSON.stringify({
+                type : "join_room",
+                roomId : id
+            }))
+
             socket.onmessage = (event) => {
                 const ParsedData = JSON.parse(event.data);
                 if(ParsedData === "chat"){
@@ -21,5 +28,14 @@ export function ChatRoomClient({
                 }
             }
         }
-    } , [loading , socket])
+    } , [loading , socket , id])
+
+    return (
+        <div>
+            { chats.map(m => <div>{m.message}</div>) }
+            <input type="text" value={currentMessages} onChange={(e) => {
+                setCurrentMessages(e.target.value)
+            }}></input>
+        </div>
+    )
 }
