@@ -8,7 +8,24 @@ import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common
 
 const app = express();
 
-app.use(express.json());
+// app.use(express.json());
+app.use((req, res, next) => {
+  if (
+    req.headers['content-type'] &&
+    req.headers['content-type'].includes('application/json')
+  ) {
+    express.json()(req, res, (err) => {
+      if (err) {
+        console.error("JSON Parse Error:", err);
+        return res.status(400).json({ error: "Invalid JSON" });
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+});
+
 app.use(express.urlencoded({ extended: true }));
 
 import dotenv from "dotenv";
@@ -181,6 +198,36 @@ app.get("/users" , async(req , res) => {
         res.status(200).json({
             message : "All Users",
             users : users
+        })
+    }catch(error){
+        console.log(error);
+        res.status(500).json({
+            message : "Error occured"
+        })
+    }
+})
+app.get("/chats" , async(req , res) => {
+    try{
+        const chats = await prisma.chat.findMany();
+
+        res.status(200).json({
+            message : "All Chats",
+            chats : chats
+        })
+    }catch(error){
+        console.log(error);
+        res.json({
+            message : "Error occured"
+        })
+    }
+})
+app.get("/rooms" , async(req , res) => {
+    try{
+        const allrooms = await prisma.room.findMany();
+
+        res.status(200).json({
+            message : "All Chats",
+            rooms : allrooms
         })
     }catch(error){
         console.log(error);
