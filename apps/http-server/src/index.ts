@@ -8,23 +8,23 @@ import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common
 
 const app = express();
 
-// app.use(express.json());
-app.use((req, res, next) => {
-  if (
-    req.headers['content-type'] &&
-    req.headers['content-type'].includes('application/json')
-  ) {
-    express.json()(req, res, (err) => {
-      if (err) {
-        console.error("JSON Parse Error:", err);
-        return res.status(400).json({ error: "Invalid JSON" });
-      }
-      next();
-    });
-  } else {
-    next();
-  }
-});
+app.use(express.json());
+// app.use((req, res, next) => {
+//   if (
+//     req.headers['content-type'] &&
+//     req.headers['content-type'].includes('application/json')
+//   ) {
+//     express.json()(req, res, (err) => {
+//       if (err) {
+//         console.error("JSON Parse Error:", err);
+//         return res.status(400).json({ error: "Invalid JSON" });
+//       }
+//       next();
+//     });
+//   } else {
+//     next();
+//   }
+// });
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -189,6 +189,28 @@ app.get("/chats/:roomId" , async (req , res) => {
     res.status(200).json({
         messages
     })
+})
+
+app.get("/room/:slug" ,async(req , res) => {
+    try {
+        const slug = req.params.slug;
+    const room = await prisma.room.findUnique({
+        where : {
+            slug
+        }
+    });
+
+    res.status(200).json({
+        message : "Slugs",
+        room : room
+    })
+    }catch(error){
+        console.log(error);
+        res.status(500).json({
+            message : "Internal server Occured while Fetching Slugs",
+            error : error
+        })
+    }
 })
 
 app.get("/users" , async(req , res) => {

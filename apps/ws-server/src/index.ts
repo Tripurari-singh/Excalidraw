@@ -1,8 +1,11 @@
 import { WebSocket, WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import "dotenv/config";
+
+
+import dotenv from "dotenv";
+dotenv.config();
+import { prisma } from "@repo/db";
 import {JWT_SECRET} from "@repo/backend-common/config"
-import { prisma } from "@repo/db"
 console.log("WS ENV:", process.env.DATABASE_URL);
 
 
@@ -38,7 +41,8 @@ function verifyTokenAuthentication(token: string): string | null {
 
 
 wss.on('connection' , function connection(ws , request){
-    const url = request.url;
+   try{
+        const url = request.url;
 
     if(!url){
         return null;
@@ -118,5 +122,12 @@ wss.on('connection' , function connection(ws , request){
     ws.on('message' , function message(data){
         ws.send('pong');
     });
+   }catch(error){
+    console.log(error);
+    ws.send(JSON.stringify({
+        type : "error",
+        message : "Complete websocket Block Broke"
+    }))
+   }
 });
 
