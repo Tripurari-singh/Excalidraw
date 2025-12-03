@@ -60,7 +60,8 @@ wss.on('connection' , function connection(ws , request){
     
     //....If The user is authenticated then only control will reach Here....
 
-    // State Management in Backend...
+    // State Management in Backend...Redux / singeltons can be used
+    
     users.push({
         userId,
         rooms : [],
