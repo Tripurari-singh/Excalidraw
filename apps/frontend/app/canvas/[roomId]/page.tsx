@@ -1,5 +1,6 @@
 "use client"
 
+import { initDraw } from "@/draw/page";
 import { useEffect, useRef } from "react"
 
 export default function canvas(){
@@ -17,11 +18,13 @@ export default function canvas(){
             if(!ctx){
                 return;
             }
-            ctx.strokeRect(25 , 25 , 100 , 100);
+
+            initDraw(canvas , ctx);
         }
     } , [canvasRef]);
 
-    return <div>
-        <canvas ref={canvasRef} width={2000} height={2000}></canvas>
+    return <div className="w-full h-screen bg-gradient-to-b from-[#0d1b2a] via-[#0b1623] to-[#0a1420]">
+        <canvas ref={canvasRef} width={1000} height={1000}></canvas>
     </div>
+
 }
