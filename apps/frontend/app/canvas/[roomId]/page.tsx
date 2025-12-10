@@ -23,8 +23,13 @@ export default function canvas(){
         }
     } , [canvasRef]);
 
-    return <div className="w-full h-screen bg-gradient-to-b from-[#0d1b2a] via-[#0b1623] to-[#0a1420]">
-        <canvas ref={canvasRef} width={1000} height={1000}></canvas>
+    return <div>
+             <div className="w-fit h-fit bg-gradient-to-b from-[#0d1b2a] via-[#0b1623] to-[#0a1420]">
+                 <canvas ref={canvasRef} width={2000} height={1500}></canvas>
+             </div>
     </div>
 
-}
+} 
+
+
+
