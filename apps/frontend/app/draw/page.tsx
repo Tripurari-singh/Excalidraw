@@ -21,6 +21,7 @@ export  async function initDraw(canvas : HTMLCanvasElement , ctx : CanvasRenderi
 
 
     let existingShapes : Shape[] = (await getExistingShapes(roomId)) ?? [] ;
+    // let existingShapes : Shape[] = [];
         
             clearCanvas(existingShapes , ctx , canvas);
 
