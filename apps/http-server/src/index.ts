@@ -9,23 +9,6 @@ import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common
 const app = express();
 
 app.use(express.json());
-// app.use((req, res, next) => {
-//   if (
-//     req.headers['content-type'] &&
-//     req.headers['content-type'].includes('application/json')
-//   ) {
-//     express.json()(req, res, (err) => {
-//       if (err) {
-//         console.error("JSON Parse Error:", err);
-//         return res.status(400).json({ error: "Invalid JSON" });
-//       }
-//       next();
-//     });
-//   } else {
-//     next();
-//   }
-// });
-
 app.use(express.urlencoded({ extended: true }));
 
 import dotenv from "dotenv";
