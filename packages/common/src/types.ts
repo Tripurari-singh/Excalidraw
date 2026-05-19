@@ -1,46 +1,21 @@
 import { z } from "zod";
 
 export const CreateUserSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(20, "Name must be at most 20 characters"),
-
-  password: z
-    .string()
-    .min(3, "Password must be at least 3 characters")
-    .max(20, "Password must be at most 20 characters"),
-
-  email: z
-    .string()
-    .email("Invalid email format"),
-
-  avatar: z
-    .string()
-    .url("Avatar must be a valid URL"),
+  username: z.string().min(3).max(20),
+  email: z.string().email(),
+  password: z.string().min(6),
+  avatar: z.string().optional(),
 });
-
 
 export const SigninSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(20, "Name must be at most 20 characters"),
-
-  password: z
-    .string()
-    .min(3, "Password must be at least 3 characters")
-    .max(20, "Password must be at most 20 characters"),
-
-  email: z
-    .string()
-    .email("Invalid email format"),
+  email: z.string().email(),
+  password: z.string().min(6),
 });
-
 
 export const CreateRoomSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Room name must be at least 3 characters")
-    .max(20, "Room name must be at most 20 characters"),
+  name: z.string().min(3).max(20),
 });
+
+export type CreateUserType = z.infer<typeof CreateUserSchema>;
+export type SigninType = z.infer<typeof SigninSchema>;
+export type CreateRoomType = z.infer<typeof CreateRoomSchema>;

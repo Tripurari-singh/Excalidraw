@@ -1,136 +1,126 @@
 import { WebSocket, WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken"
 
-
 import dotenv from "dotenv";
 dotenv.config();
 import { prisma } from "@repo/db";
-import {JWT_SECRET} from "@repo/backend-common/config"
+import { JWT_SECRET } from "@repo/backend-common/config"
 console.log("WS ENV:", process.env.DATABASE_URL);
 
-
-
-const wss = new WebSocketServer({port : 8080});
+const wss = new WebSocketServer({ port: 8080 });
 
 interface UserInterface {
-    ws : WebSocket,
-    userId : string,
-    rooms : string[],
+    ws: WebSocket,
+    userId: string,
+    rooms: string[],
 }
 
-const users : UserInterface[] = [];
-
+const users: UserInterface[] = [];
 
 function verifyTokenAuthentication(token: string): string | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
 
-    // If decoded is a string, token is valid but doesn't contain user info
-    if (typeof decoded === "string") return null;
+        // If decoded is a string, token is valid but doesn't contain user info
+        if (typeof decoded === "string") return null;
 
-    // Validate decoded object
-    const userId = decoded?.userId;
-    if (!userId) return null;
+        // Validate decoded object
+        const userId = decoded?.userId;
+        if (!userId) return null;
 
-    return userId;
-  } catch (error) {
-    console.error("JWT verification failed:", error);
-    return null;
-  }
+        return userId;
+    } catch (error) {
+        console.error("JWT verification failed:", error);
+        return null;
+    }
 }
 
-
-wss.on('connection' , function connection(ws , request){
-   try{
+wss.on('connection', function connection(ws, request) {
+    try {
         const url = request.url;
 
-    if(!url){
-        return null;
-    }
-
-    const queryParms = new URLSearchParams(url.split('?')[1]);
-    const token = queryParms.get("token") ?? "";
-    const userId = verifyTokenAuthentication(token);
-
-    if (!userId){
-        ws.close();
-        return null;
-    }
-
-    
-    //....If The user is authenticated then only control will reach Here....
-
-    // State Management in Backend...Redux / singeltons can be used
-    
-    users.push({
-        userId,
-        rooms : [],
-        ws
-    })
-
-    ws.on('message' , async function(data){
-        const ParsedData = JSON.parse(data as unknown as string);
-        
-        // If user wants to Join the Room
-        if(ParsedData.type === "join_room"){
-            const user = users.find(x => x.ws === ws);
-            user?.rooms.push(ParsedData.roomId);
+        if (!url) {
+            return null;
         }
-        
-        // If user wants to Leave the room..
-        if(ParsedData.type === "leave_room"){
-            const user = users.find(x => x.ws === ws);
 
-            if(!user){
-                return;
+        const queryParms = new URLSearchParams(url.split('?')[1]);
+        const token = queryParms.get("token") ?? "";
+        const userId = verifyTokenAuthentication(token);
+
+        if (!userId) {
+            ws.close();
+            return;
+        }
+
+        //....If The user is authenticated then only control will reach Here....
+
+        // State Management in Backend...Redux / singeltons can be used
+
+        users.push({
+            userId,
+            rooms: [],
+            ws
+        })
+
+        ws.on('message', async function (data) {
+            const ParsedData = JSON.parse(data as unknown as string);
+
+            // If user wants to Join the Room
+            if (ParsedData.type === "join_room") {
+                const user = users.find(x => x.ws === ws);
+                user?.rooms.push(ParsedData.roomId);
             }
-            user.rooms = user?.rooms.filter(x => x === ParsedData.room);
-        }
-        
-        // Adding Chat to the specific room..
-        if (ParsedData.type === "chat"){
-            const roomId = ParsedData.roomId;
-            const message = ParsedData.message;
 
-            try{
-                await prisma.chat.create({
-                    data : {
-                        roomId,
-                        message,
-                        userId
+            // If user wants to Leave the room..
+            if (ParsedData.type === "leave_room") {
+                const user = users.find(x => x.ws === ws);
+
+                if (!user) {
+                    return;
+                }
+                user.rooms = user?.rooms.filter(x => x !== ParsedData.roomId);
+            }
+
+            // Adding Chat to the specific room..
+            if (ParsedData.type === "chat") {
+                const roomId = ParsedData.roomId;
+                const message = ParsedData.message;
+
+                try {
+                    await prisma.chat.create({
+                        data: {
+                            roomId,
+                            message,
+                            userId
+                        }
+                    })
+                } catch (error) {
+                    console.log(error);
+                    ws.send(JSON.stringify({
+                        type: "error",
+                        message: "Databse failed"
+                    }))
+                    return;
+                }
+
+                users.forEach(user => {
+                    if (user.rooms.includes(String(roomId))) {
+                        user.ws.send(JSON.stringify({
+                            type: "chat",
+                            message: message,
+                            roomId
+                        }));
                     }
-                })
-            }catch(error){
-                console.log(error);
-                ws.send(JSON.stringify({
-                    type : "error",
-                    message : "Databse failed"
-                }))
-                return;
+                });
             }
-
-            users.forEach(user => {
-                user.ws.send(JSON.stringify({
-                    type : "chat",
-                    message : message,
-                    roomId
-                }))
-            })
-        }
-    }) 
-
-   
-    ws.on('message' , function message(data){
-        ws.send('pong');
-    });
-   }catch(error){
-    console.log(error);
-    ws.send(JSON.stringify({
-        type : "error",
-        message : "Complete websocket Block Broke"
-    }))
-   }
+        })
+    } catch (error) {
+        console.log(error);
+        ws.send(JSON.stringify({
+            type: "error",
+            message: "Complete websocket Block Broke"
+        }))
+    }
 });
 
 // Need to Implement Queue Architecture , this is Completely unoptimal Approach
-
