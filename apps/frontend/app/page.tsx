@@ -50,9 +50,10 @@ export default function App() {
                 Start Drawing
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              
+              <a
                 href="https://github.com/Tripurari-singh/Excalidraw"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all border border-gray-700 hover:border-red-600 flex items-center gap-2">
                 <Github className="w-5 h-5" />
                 View on GitHub
