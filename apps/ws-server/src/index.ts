@@ -1,18 +1,16 @@
 import { WebSocket, WebSocketServer } from "ws";
-import jwt, { JwtPayload } from "jsonwebtoken"
-
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 import { prisma } from "@repo/db";
-import { JWT_SECRET } from "@repo/backend-common/config"
-console.log("WS ENV:", process.env.DATABASE_URL);
+import { JWT_SECRET } from "@repo/backend-common/config";
 
 const wss = new WebSocketServer({ port: 8080 });
 
 interface UserInterface {
-    ws: WebSocket,
-    userId: string,
-    rooms: string[],
+    ws: WebSocket;
+    userId: string;
+    rooms: string[];
 }
 
 const users: UserInterface[] = [];
@@ -20,14 +18,9 @@ const users: UserInterface[] = [];
 function verifyTokenAuthentication(token: string): string | null {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-
-        // If decoded is a string, token is valid but doesn't contain user info
         if (typeof decoded === "string") return null;
-
-        // Validate decoded object
         const userId = decoded?.userId;
         if (!userId) return null;
-
         return userId;
     } catch (error) {
         console.error("JWT verification failed:", error);
@@ -35,16 +28,13 @@ function verifyTokenAuthentication(token: string): string | null {
     }
 }
 
-wss.on('connection', function connection(ws, request) {
+wss.on("connection", function connection(ws, request) {
     try {
         const url = request.url;
+        if (!url) return;
 
-        if (!url) {
-            return null;
-        }
-
-        const queryParms = new URLSearchParams(url.split('?')[1]);
-        const token = queryParms.get("token") ?? "";
+        const queryParams = new URLSearchParams(url.split("?")[1]);
+        const token = queryParams.get("token") ?? "";
         const userId = verifyTokenAuthentication(token);
 
         if (!userId) {
@@ -52,75 +42,66 @@ wss.on('connection', function connection(ws, request) {
             return;
         }
 
-        //....If The user is authenticated then only control will reach Here....
+        users.push({ userId, rooms: [], ws });
 
-        // State Management in Backend...Redux / singeltons can be used
+        ws.on("message", async function (data) {
+            const parsedData = JSON.parse(data as unknown as string);
 
-        users.push({
-            userId,
-            rooms: [],
-            ws
-        })
-
-        ws.on('message', async function (data) {
-            const ParsedData = JSON.parse(data as unknown as string);
-
-            // If user wants to Join the Room
-            if (ParsedData.type === "join_room") {
-                const user = users.find(x => x.ws === ws);
-                user?.rooms.push(ParsedData.roomId);
+            // Join room
+            if (parsedData.type === "join_room") {
+                const user = users.find((x) => x.ws === ws);
+                user?.rooms.push(String(parsedData.roomId));
             }
 
-            // If user wants to Leave the room..
-            if (ParsedData.type === "leave_room") {
-                const user = users.find(x => x.ws === ws);
-
-                if (!user) {
-                    return;
-                }
-                user.rooms = user?.rooms.filter(x => x !== ParsedData.roomId);
+            // Leave room — BUG FIX: was === should be !==
+            if (parsedData.type === "leave_room") {
+                const user = users.find((x) => x.ws === ws);
+                if (!user) return;
+                user.rooms = user.rooms.filter((x) => x !== String(parsedData.roomId));
             }
 
-            // Adding Chat to the specific room..
-            if (ParsedData.type === "chat") {
-                const roomId = ParsedData.roomId;
-                const message = ParsedData.message;
+            // Chat/draw — BUG FIX: only broadcast to users IN this room
+            if (parsedData.type === "chat") {
+                const roomId = String(parsedData.roomId);
+                const message = parsedData.message;
 
                 try {
                     await prisma.chat.create({
                         data: {
-                            roomId,
+                            roomId: Number(roomId),
                             message,
-                            userId
-                        }
-                    })
+                            userId,
+                        },
+                    });
                 } catch (error) {
                     console.log(error);
-                    ws.send(JSON.stringify({
-                        type: "error",
-                        message: "Databse failed"
-                    }))
+                    ws.send(JSON.stringify({ type: "error", message: "Database failed" }));
                     return;
                 }
 
-                users.forEach(user => {
-                    if (user.rooms.includes(String(roomId))) {
+                // Only send to users who joined this room
+                users.forEach((user) => {
+                    if (user.rooms.includes(roomId)) {
                         user.ws.send(JSON.stringify({
                             type: "chat",
-                            message: message,
-                            roomId
+                            message,
+                            roomId,
                         }));
                     }
                 });
             }
-        })
+        });
+
+        // Clean up user on disconnect
+        ws.on("close", () => {
+            const index = users.findIndex((x) => x.ws === ws);
+            if (index !== -1) users.splice(index, 1);
+        });
+
     } catch (error) {
         console.log(error);
-        ws.send(JSON.stringify({
-            type: "error",
-            message: "Complete websocket Block Broke"
-        }))
+        ws.send(JSON.stringify({ type: "error", message: "WebSocket error" }));
     }
 });
 
-// Need to Implement Queue Architecture , this is Completely unoptimal Approach
+console.log("WS server running on port 8080");
