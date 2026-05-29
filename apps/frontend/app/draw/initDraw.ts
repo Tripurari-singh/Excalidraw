@@ -3,9 +3,28 @@ import axios from "axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Shape =
-  | { id: string; type: "rectangle"; x: number; y: number; width: number; height: number; color: string; strokeWidth: number }
-  | { id: string; type: "circle"; centerX: number; centerY: number; radius: number; color: string; strokeWidth: number };
+export type ToolType = "select" | "rectangle" | "circle" | "line" | "pencil" | "text" | "eraser";
+
+export type Shape =
+  | { id: string; type: "rectangle"; x: number; y: number; width: number; height: number; color: string; strokeWidth: number; fill: string }
+  | { id: string; type: "circle";    centerX: number; centerY: number; radius: number; color: string; strokeWidth: number; fill: string }
+  | { id: string; type: "line";      x1: number; y1: number; x2: number; y2: number; color: string; strokeWidth: number }
+  | { id: string; type: "pencil";    points: [number, number][]; color: string; strokeWidth: number }
+  | { id: string; type: "text";      x: number; y: number; text: string; color: string; fontSize: number };
+
+export interface DrawState {
+  tool:        ToolType;
+  color:       string;
+  strokeWidth: number;
+  fill:        string;
+}
+
+// ─── Canvas State (shared with toolbar via callbacks) ─────────────────────────
+
+export interface CanvasCallbacks {
+  onToolChange:   (tool: ToolType) => void;
+  onClearCanvas:  () => void;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -14,48 +33,94 @@ function generateId(): string {
 }
 
 function drawShape(ctx: CanvasRenderingContext2D, shape: Shape) {
-  ctx.strokeStyle = shape.color;
-  ctx.lineWidth   = shape.strokeWidth;
+  ctx.save();
+  ctx.lineCap  = "round";
+  ctx.lineJoin = "round";
 
-  if (shape.type === "rectangle") {
-    ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-  } else if (shape.type === "circle") {
-    ctx.beginPath();
-    ctx.arc(shape.centerX, shape.centerY, shape.radius, 0, Math.PI * 2);
-    ctx.stroke();
+  switch (shape.type) {
+    case "rectangle": {
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth   = shape.strokeWidth;
+      if (shape.fill && shape.fill !== "transparent") {
+        ctx.fillStyle = shape.fill;
+        ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+      }
+      ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+      break;
+    }
+    case "circle": {
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth   = shape.strokeWidth;
+      ctx.beginPath();
+      ctx.arc(shape.centerX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
+      if (shape.fill && shape.fill !== "transparent") {
+        ctx.fillStyle = shape.fill;
+        ctx.fill();
+      }
+      ctx.stroke();
+      break;
+    }
+    case "line": {
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth   = shape.strokeWidth;
+      ctx.beginPath();
+      ctx.moveTo(shape.x1, shape.y1);
+      ctx.lineTo(shape.x2, shape.y2);
+      ctx.stroke();
+      break;
+    }
+    case "pencil": {
+      if (shape.points.length < 2) break;
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth   = shape.strokeWidth;
+      ctx.beginPath();
+      ctx.moveTo(shape.points[0]![0], shape.points[0]![1]);
+      for (let i = 1; i < shape.points.length; i++) {
+        ctx.lineTo(shape.points[i]![0], shape.points[i]![1]);
+      }
+      ctx.stroke();
+      break;
+    }
+    case "text": {
+      ctx.fillStyle = shape.color;
+      ctx.font      = `${shape.fontSize}px 'Segoe UI', sans-serif`;
+      ctx.fillText(shape.text, shape.x, shape.y);
+      break;
+    }
   }
+
+  ctx.restore();
 }
 
-function redrawCanvas(
-  shapes: Shape[],
-  ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement
-) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function redrawCanvas(shapes: Shape[], ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+  // Dark grid background
+  ctx.fillStyle = "#0f1117";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Subtle dot grid
+  ctx.fillStyle = "rgba(255,255,255,0.04)";
+  const gridSize = 24;
+  for (let x = 0; x < canvas.width; x += gridSize) {
+    for (let y = 0; y < canvas.height; y += gridSize) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   shapes.forEach((shape) => drawShape(ctx, shape));
 }
 
-// Parse messages stored in DB back into shapes.
-// Each message is either a raw shape JSON or a draw/erase event wrapper.
 function parseStoredMessages(messages: { message: string }[]): Shape[] {
   const shapes: Shape[] = [];
   const erased = new Set<string>();
 
-  // Messages are oldest-first from the API
   for (const msg of messages) {
     try {
       const parsed = JSON.parse(msg.message);
-
-      if (parsed.shapeData) {
-        // A draw event — add the shape
-        shapes.push(parsed.shapeData as Shape);
-      } else if (parsed.eraseShapeId) {
-        // An erase event — mark for removal
-        erased.add(parsed.eraseShapeId);
-      }
-    } catch {
-      // Not JSON — skip (plain chat messages)
-    }
+      if (parsed.shapeData)    shapes.push(parsed.shapeData as Shape);
+      if (parsed.eraseShapeId) erased.add(parsed.eraseShapeId);
+    } catch { /* plain text message, skip */ }
   }
 
   return shapes.filter((s) => !erased.has(s.id));
@@ -70,15 +135,17 @@ async function loadExistingShapes(roomId: string): Promise<Shape[]> {
   }
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Main Export ──────────────────────────────────────────────────────────────
 
 export async function initDraw(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  roomId: string
+  roomId: string,
+  // State is passed in via a ref from the React component so the toolbar can update it
+  getState: () => DrawState,
+  onClear: (fn: () => void) => void
 ): Promise<() => void> {
 
-  // Load and render existing canvas state from DB
   let shapes: Shape[] = await loadExistingShapes(roomId);
   redrawCanvas(shapes, ctx, canvas);
 
@@ -87,97 +154,153 @@ export async function initDraw(
   const token = localStorage.getItem("token");
   const ws    = new WebSocket(`${WS_BACKEND_URL}?token=${token}`);
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: "join_room", roomId }));
-  };
+  ws.onopen = () => ws.send(JSON.stringify({ type: "join_room", roomId }));
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
-
     switch (data.type) {
-      case "draw": {
-        // Another user drew a shape — add it and re-render
-        const incoming = data.shape as Shape;
-        shapes.push(incoming);
+      case "draw":
+        shapes.push(data.shape as Shape);
         redrawCanvas(shapes, ctx, canvas);
         break;
-      }
-      case "erase": {
-        // Another user erased a shape — remove by ID and re-render
+      case "erase":
         shapes = shapes.filter((s) => s.id !== data.shapeId);
         redrawCanvas(shapes, ctx, canvas);
         break;
-      }
-      case "clear_canvas": {
-        // Someone cleared the whole canvas
+      case "clear_canvas":
         shapes = [];
         redrawCanvas(shapes, ctx, canvas);
         break;
-      }
     }
   };
 
-  ws.onerror = (err) => {
-    console.error("[WS] error:", err);
+  // Expose clear function to toolbar button
+  onClear(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "clear_canvas", roomId }));
+    }
+    shapes = [];
+    redrawCanvas(shapes, ctx, canvas);
+  });
+
+  // ── Drawing Logic ──────────────────────────────────────────────────────────
+
+  let isDrawing    = false;
+  let startX       = 0;
+  let startY       = 0;
+  let pencilPoints: [number, number][] = [];
+  let currentPencilId = "";
+
+  const getPos = (e: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
-  // ── Mouse Drawing Logic ────────────────────────────────────────────────────
-
-  let isDrawing = false;
-  let startX    = 0;
-  let startY    = 0;
-
-  // Current tool — can be extended to "circle", "pencil" etc.
-  const tool        = "rectangle";
-  const color       = "#ffffff";
-  const strokeWidth = 2;
-
   const onMouseDown = (e: MouseEvent) => {
+    const { x, y } = getPos(e);
+    const state = getState();
+
+    if (state.tool === "eraser") {
+      // Find and remove the topmost shape under cursor
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const s = shapes[i]!;
+        // Simple bounding box hit test for all shapes
+        let hit = false;
+        if (s.type === "rectangle" && x >= s.x && x <= s.x + s.width && y >= s.y && y <= s.y + s.height) hit = true;
+        if (s.type === "circle"    && Math.hypot(x - s.centerX, y - s.centerY) <= s.radius) hit = true;
+        if (hit) {
+          const id = s.id;
+          shapes = shapes.filter((sh) => sh.id !== id);
+          redrawCanvas(shapes, ctx, canvas);
+          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "erase", roomId, shapeId: id }));
+          break;
+        }
+      }
+      return;
+    }
+
     isDrawing = true;
-    startX    = e.clientX;
-    startY    = e.clientY;
+    startX    = x;
+    startY    = y;
+
+    if (state.tool === "pencil") {
+      pencilPoints    = [[x, y]];
+      currentPencilId = generateId();
+    }
   };
 
   const onMouseMove = (e: MouseEvent) => {
     if (!isDrawing) return;
+    const { x, y } = getPos(e);
+    const state     = getState();
 
-    // Draw a live preview while dragging — doesn't get saved until mouseup
     redrawCanvas(shapes, ctx, canvas);
+    ctx.save();
+    ctx.strokeStyle = state.color;
+    ctx.lineWidth   = state.strokeWidth;
+    ctx.lineCap     = "round";
+    ctx.lineJoin    = "round";
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth   = strokeWidth;
-
-    if (tool === "rectangle") {
-      ctx.strokeRect(startX, startY, e.clientX - startX, e.clientY - startY);
+    switch (state.tool) {
+      case "rectangle":
+        if (state.fill !== "transparent") { ctx.fillStyle = state.fill; ctx.fillRect(startX, startY, x - startX, y - startY); }
+        ctx.strokeRect(startX, startY, x - startX, y - startY);
+        break;
+      case "circle": {
+        const radius = Math.hypot(x - startX, y - startY);
+        ctx.beginPath();
+        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        if (state.fill !== "transparent") { ctx.fillStyle = state.fill; ctx.fill(); }
+        ctx.stroke();
+        break;
+      }
+      case "line":
+        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(x, y); ctx.stroke();
+        break;
+      case "pencil":
+        pencilPoints.push([x, y]);
+        ctx.beginPath();
+        ctx.moveTo(pencilPoints[0]![0], pencilPoints[0]![1]);
+        pencilPoints.forEach(([px, py]) => ctx.lineTo(px, py));
+        ctx.stroke();
+        break;
     }
+
+    ctx.restore();
   };
 
   const onMouseUp = (e: MouseEvent) => {
     if (!isDrawing) return;
     isDrawing = false;
+    const { x, y } = getPos(e);
+    const state     = getState();
 
-    const newShape: Shape = {
-      id:          generateId(),
-      type:        "rectangle",
-      x:           startX,
-      y:           startY,
-      width:       e.clientX - startX,
-      height:      e.clientY - startY,
-      color,
-      strokeWidth,
-    };
+    let newShape: Shape | null = null;
 
-    // Optimistically add and render locally
-    shapes.push(newShape);
-    redrawCanvas(shapes, ctx, canvas);
+    switch (state.tool) {
+      case "rectangle":
+        newShape = { id: generateId(), type: "rectangle", x: startX, y: startY, width: x - startX, height: y - startY, color: state.color, strokeWidth: state.strokeWidth, fill: state.fill };
+        break;
+      case "circle":
+        newShape = { id: generateId(), type: "circle", centerX: startX, centerY: startY, radius: Math.hypot(x - startX, y - startY), color: state.color, strokeWidth: state.strokeWidth, fill: state.fill };
+        break;
+      case "line":
+        newShape = { id: generateId(), type: "line", x1: startX, y1: startY, x2: x, y2: y, color: state.color, strokeWidth: state.strokeWidth };
+        break;
+      case "pencil":
+        if (pencilPoints.length > 1) {
+          newShape = { id: currentPencilId, type: "pencil", points: pencilPoints, color: state.color, strokeWidth: state.strokeWidth };
+        }
+        pencilPoints = [];
+        break;
+    }
 
-    // Send to server — it persists it and broadcasts to other users
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type:   "draw",
-        roomId,
-        shape:  newShape,
-      }));
+    if (newShape) {
+      shapes.push(newShape);
+      redrawCanvas(shapes, ctx, canvas);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "draw", roomId, shape: newShape }));
+      }
     }
   };
 
@@ -186,13 +309,11 @@ export async function initDraw(
   canvas.addEventListener("mouseup",   onMouseUp);
 
   // ── Cleanup ────────────────────────────────────────────────────────────────
-  // Returned and called by the React component on unmount
 
   return () => {
     canvas.removeEventListener("mousedown", onMouseDown);
     canvas.removeEventListener("mousemove", onMouseMove);
     canvas.removeEventListener("mouseup",   onMouseUp);
-
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: "leave_room", roomId }));
       ws.close();
