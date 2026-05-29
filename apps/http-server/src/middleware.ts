@@ -1,25 +1,34 @@
 import { Request, Response, NextFunction } from "express";
-import {JWT_SECRET} from "@repo/backend-common/config"
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { JWT_SECRET } from "@repo/backend-common/config";
 
-export function middleware(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
   }
+}
+
+export function authenticate(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ message: "Authorization header missing or malformed" });
+    return;
+  }
+
+  const token = authHeader.replace("Bearer ", "").trim();
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-
-    if (!decoded || !decoded.userId) {
-      return res.status(401).json({ message: "Invalid token" });
+    if (!decoded.userId) {
+      res.status(401).json({ message: "Invalid token payload" });
+      return;
     }
-     
-    //@ts-ignore
     req.userId = decoded.userId;
     next();
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch {
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 }
