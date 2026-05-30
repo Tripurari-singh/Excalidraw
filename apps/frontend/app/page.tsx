@@ -1,6 +1,10 @@
+"use client";
 import { Pencil, Layers, Users, Zap, ArrowRight, Github, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-function App() {
+export default function App() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <nav className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-50">
@@ -10,10 +14,14 @@ function App() {
             <span className="text-2xl font-bold text-white">DrawSpace</span>
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-gray-300 hover:text-white transition-colors px-4 py-2 hover:bg-gray-800/50 rounded-lg">
+            <button
+              onClick={() => router.push('/signin')}
+              className="text-gray-300 hover:text-white transition-colors px-4 py-2 hover:bg-gray-800/50 rounded-lg">
               Sign In
             </button>
-            <button className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg transition-all hover:shadow-lg hover:shadow-red-500/50">
+            <button
+              onClick={() => router.push('/signup')}
+              className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg transition-all hover:shadow-lg hover:shadow-red-500/50">
               Sign Up
             </button>
           </div>
@@ -36,14 +44,20 @@ function App() {
               A powerful whiteboard tool for visualizing ideas, diagrams, and workflows. Simple, intuitive, and built for teams that move fast.
             </p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
-              <button className="group bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all hover:shadow-2xl hover:shadow-red-500/50 hover:scale-105 flex items-center gap-2">
+              <button
+                onClick={() => router.push('/signup')}
+                className="group bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all hover:shadow-2xl hover:shadow-red-500/50 hover:scale-105 flex items-center gap-2">
                 Start Drawing
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all border border-gray-700 hover:border-red-600 hover:border-opacity-50 flex items-center gap-2">
+              <a
+                href="https://github.com/Tripurari-singh/Excalidraw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all border border-gray-700 hover:border-red-600 flex items-center gap-2">
                 <Github className="w-5 h-5" />
                 View on GitHub
-              </button>
+              </a>
             </div>
           </div>
         </section>
@@ -60,29 +74,21 @@ function App() {
                   <Layers className="w-7 h-7 text-red-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">Infinite Canvas</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Draw without limits. Pan, zoom, and create on an endless canvas that grows with your ideas.
-                </p>
+                <p className="text-gray-400 leading-relaxed">Draw without limits. Pan, zoom, and create on an endless canvas that grows with your ideas.</p>
               </div>
-
               <div className="group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-8 hover:bg-gray-800 hover:border-red-600/50 transition-all hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1">
                 <div className="w-14 h-14 bg-red-600/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-red-600/30 transition-colors">
                   <Users className="w-7 h-7 text-red-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">Real-time Collaboration</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Work together seamlessly. See changes instantly as your team creates in real-time.
-                </p>
+                <p className="text-gray-400 leading-relaxed">Work together seamlessly. See changes instantly as your team creates in real-time.</p>
               </div>
-
               <div className="group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-8 hover:bg-gray-800 hover:border-red-600/50 transition-all hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1">
                 <div className="w-14 h-14 bg-red-600/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-red-600/30 transition-colors">
                   <Zap className="w-7 h-7 text-red-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">Lightning Fast</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Optimized performance for smooth drawing experience, even with complex diagrams.
-                </p>
+                <p className="text-gray-400 leading-relaxed">Optimized performance for smooth drawing experience, even with complex diagrams.</p>
               </div>
             </div>
           </div>
@@ -91,10 +97,10 @@ function App() {
         <section className="max-w-7xl mx-auto px-6 py-24">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold text-white mb-6">Ready to bring your ideas to life?</h2>
-            <p className="text-gray-400 mb-10 text-lg">
-              Join thousands of creators, designers, and teams using DrawSpace every day.
-            </p>
-            <button className="group bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-10 py-4 rounded-lg text-lg font-semibold transition-all hover:shadow-2xl hover:shadow-red-500/50 hover:scale-105 flex items-center gap-2 mx-auto">
+            <p className="text-gray-400 mb-10 text-lg">Join thousands of creators, designers, and teams using DrawSpace every day.</p>
+            <button
+              onClick={() => router.push('/signup')}
+              className="group bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-10 py-4 rounded-lg text-lg font-semibold transition-all hover:shadow-2xl hover:shadow-red-500/50 hover:scale-105 flex items-center gap-2 mx-auto">
               Create Your First Board
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
@@ -138,18 +144,14 @@ function App() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8">
-            <div className="flex items-center justify-between text-gray-500">
-              <p>© 2024 DrawSpace. All rights reserved.</p>
-              <div className="flex gap-4">
-                <a href="#" className="hover:text-red-400 transition-colors"><Github className="w-5 h-5" /></a>
-              </div>
-            </div>
+          <div className="border-t border-gray-800 pt-8 flex items-center justify-between text-gray-500">
+            <p>© 2024 DrawSpace. All rights reserved.</p>
+            <a href="https://github.com/Tripurari-singh/Excalidraw" target="_blank" className="hover:text-red-400 transition-colors">
+              <Github className="w-5 h-5" />
+            </a>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
-export default App;
