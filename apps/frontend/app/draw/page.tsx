@@ -1,52 +1,25 @@
 "use client";
 
-import { useEffect, useRef, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { initDraw } from "./initDraw";
+import CanvasComponent from "@/app/components/canvas";
 
 function DrawCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const searchParams = useSearchParams();
   const roomId = searchParams.get("roomId") ?? "";
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !roomId) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let cleanup: (() => void) | undefined;
-    initDraw(canvas, ctx, roomId).then((fn) => { cleanup = fn; });
-
-    const handleResize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      cleanup?.();
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [roomId]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="block bg-gray-950"
-      style={{ cursor: "crosshair" }}
-    />
+  if (!roomId) return (
+    <div className="w-screen h-screen bg-[#0f1117] flex items-center justify-center text-gray-500">
+      No room specified
+    </div>
   );
+
+  return <CanvasComponent roomId={roomId} />;
 }
 
-// useSearchParams() requires a Suspense boundary above it during SSR/static generation
 export default function DrawPage() {
   return (
-    <Suspense fallback={<div className="w-screen h-screen bg-gray-950" />}>
+    <Suspense fallback={<div className="w-screen h-screen bg-[#0f1117]" />}>
       <DrawCanvas />
     </Suspense>
   );
