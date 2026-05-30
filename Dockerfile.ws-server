@@ -1,0 +1,26 @@
+FROM node:20-alpine AS base
+RUN npm install -g pnpm@9.0.0
+
+FROM base AS builder
+WORKDIR /app
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/typescript-config ./packages/typescript-config
+COPY packages/backend-common ./packages/backend-common
+COPY packages/common ./packages/common
+COPY packages/database ./packages/database
+COPY apps/ws-server ./apps/ws-server
+RUN pnpm install --frozen-lockfile
+RUN pnpm exec turbo run build --filter=ws-server
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN npm install -g pnpm@9.0.0
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/typescript-config ./packages/typescript-config
+COPY packages/backend-common ./packages/backend-common
+COPY packages/common ./packages/common
+COPY packages/database ./packages/database
+COPY apps/ws-server ./apps/ws-server
+RUN pnpm install --frozen-lockfile --prod
+EXPOSE 8080
+CMD ["node", "apps/ws-server/dist/index.js"]
