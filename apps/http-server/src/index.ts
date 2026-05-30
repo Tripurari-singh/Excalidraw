@@ -2,20 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
-<<<<<<< HEAD
-import jwt from "jsonwebtoken"
-// import bodyParser from "body-parser";
-import { middleware } from "./middleware";
-import { JWT_SECRET } from "@repo/backend-common/config"
-import { CreateUserSchema , SigninSchema , CreateRoomSchema } from "@repo/common/types";
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-import dotenv from "dotenv";
-dotenv.config();
-import { prisma } from "@repo/db";
-import { ZodError } from "zod";
-=======
 import jwt from "jsonwebtoken";
 import { ZodError } from "zod";
 import { authenticate } from "./middleware";
@@ -35,26 +21,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
->>>>>>> finishing
 
 function sanitizeUser(user: { id: string; email: string; username: string; avatar: string | null }) {
   return { id: user.id, email: user.email, username: user.username, avatar: user.avatar };
 }
 
-<<<<<<< HEAD
-
-app.post("/signup" , async (req  , res) => {
-    console.log("Route Hit")
-    try{
-     
-    const ParsedData = CreateUserSchema.parse(req.body);
-    
-    if(!ParsedData){
-        res.status(400).json({
-            message : "Invalid crediantials"
-        })
-        return; 
-=======
 function handleZodError(error: ZodError, res: express.Response) {
   const messages = error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
   res.status(400).json({ message: "Validation failed", errors: messages });
@@ -70,7 +41,6 @@ app.post("/signup", async (req, res) => {
     if (existingUser) {
       res.status(409).json({ message: "An account with this email already exists" });
       return;
->>>>>>> finishing
     }
 
     const hashedPassword = await bcrypt.hash(body.password, 12);
@@ -224,12 +194,5 @@ app.get("/health", (_req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
-
-app.listen(3000 , () => {
-    console.log("server is listening on port 3000 !!")
-})
-=======
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`HTTP server running on http://localhost:${PORT}`));
->>>>>>> finishing
